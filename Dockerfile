@@ -1,8 +1,7 @@
 FROM node:18-slim
 
-# Fix apt mirrors and pre-install headless Chromium with rendering dependencies
-RUN apt-get clean && \
-    apt-get update --fix-missing && \
+# Clean apt cache, update package list, and install Chromium with dependencies
+RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
