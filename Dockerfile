@@ -1,9 +1,7 @@
 FROM node:18-slim
 
-# Clean stale package caches, update lists, and install Chromium with dependencies
-RUN apt-get clean && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
+# Update package index and install Chromium dependencies in a single step
+RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
     libasound2 \
