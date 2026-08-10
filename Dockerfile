@@ -1,14 +1,25 @@
 FROM ghcr.io/puppeteer/puppeteer:21.5.0
 
-# Set working directory inside the Puppeteer image
+# Switch to root user to allow file copying and package installation
+USER root
+
+# Set working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package files and install Node.js dependencies
+# Copy package files
 COPY package*.json ./
+
+# Grant pptruser ownership of the working directory
+RUN chown -R pptruser:pptruser /usr/src/app
+
+# Switch back to pptruser for npm install
+USER pptruser
+
+# Install Node.js dependencies
 RUN npm install
 
-# Copy application files
-COPY . .
+# Copy remaining application code
+COPY --chown=pptruser:pptruser . .
 
-# Run application
+# Launch application
 CMD ["node", "index.js"]
