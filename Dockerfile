@@ -1,7 +1,9 @@
 FROM node:18-slim
 
-# Install Chromium and required Linux libraries for whatsapp-web.js
-RUN apt-get update && apt-get install -y \
+# Fix apt mirrors and pre-install headless Chromium with rendering dependencies
+RUN apt-get clean && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
     libasound2 \
@@ -38,8 +40,6 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
 WORKDIR /usr/src/app
 
 COPY package*.json ./
@@ -47,4 +47,4 @@ RUN npm install
 
 COPY . .
 
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
