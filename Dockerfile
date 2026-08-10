@@ -1,6 +1,6 @@
-FROM node:18-slim
+FROM node:20-bookworm-slim
 
-# Update package index and install Chromium dependencies in a single step
+# Install Chromium and required libraries from active Debian Bookworm repositories
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libexpat1 \
     libfontconfig1 \
     libgbm1 \
-    libgcc1 \
+    libgcc-s1 \
     libglib2.0-0 \
     libgtk-3-0 \
     libnspr4 \
