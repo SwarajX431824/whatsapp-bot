@@ -1,7 +1,8 @@
 FROM node:18-slim
 
-# Clean apt cache, update package list, and install Chromium with dependencies
-RUN apt-get update -y && \
+# Clean stale package caches, update lists, and install Chromium with dependencies
+RUN apt-get clean && \
+    apt-get update -y && \
     apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
