@@ -4,7 +4,7 @@ const qrcode = require('qrcode-terminal');
 const { GoogleGenAI } = require('@google/genai');
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: "AQ.Ab8RN6IC21B0iyE-fOU1N0eOqNU1ZAQuq3kpV4bbRblwvxZ2TA" });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Initialize WhatsApp Web Client
 const client = new Client({
