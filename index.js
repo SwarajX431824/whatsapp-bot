@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { GoogleGenAI } = require('@google/genai');
@@ -14,21 +13,32 @@ const client = new Client({
     }
 });
 
-client.on('qr', async (qr) => {
-    // Standard terminal QR
+client.on('qr', (qr) => {
+    // Render a compact QR code in terminal
     qrcode.generate(qr, { small: true });
+});
 
-    // Request an 8-character pairing code
-    // IMPORTANT: Replace '91XXXXXXXXXX' with your country code + full phone number (e.g., 91 for India)
-    try {
-        const code = await client.getPairingCode('919823590390');
-        console.log('====================================');
-        console.log('YOUR WHATSAPP PAIRING CODE IS:', code);
-        console.log('====================================');
-    } catch (err) {
-        console.log('Pairing code error:', err.message);
+client.on('ready', () => {
+    console.log('WhatsApp On-Demand Bot is Online and Ready!');
+});
+
+// AI Response Logic
+client.on('message_create', async (msg) => {
+    if (msg.body.startsWith('!reply')) {
+        const prompt = msg.body.replace('!reply', '').trim();
+        try {
+            const response = await ai.models.generateContent({
+                model: 'gemini-1.5-flash',
+                contents: prompt,
+            });
+            await msg.reply(response.text);
+        } catch (err) {
+            console.error('Error generating AI response:', err.message);
+        }
     }
 });
+
+client.initialize();
 
 client.on('ready', () => {
     console.log('WhatsApp On-Demand Bot is Online and Ready!');
