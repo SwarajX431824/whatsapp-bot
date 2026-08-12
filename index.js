@@ -27,7 +27,8 @@ const puppeteerOpts = {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--unhandled-rejections=strict'
     ]
 };
 
@@ -41,16 +42,25 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
+    // Print ASCII terminal QR
     qrcode.generate(qr, { small: true });
+
+    // Print a clean, instant web link to open in your browser
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
+    console.log('\n====================================');
+    console.log('IF TERMINAL QR FAILS, OPEN THIS LINK TO SCAN:');
+    console.log(qrImageUrl);
+    console.log('====================================\n');
 });
 
 client.on('ready', () => {
     console.log('WhatsApp On-Demand Bot is Online and Ready!');
 });
 
-// Primary event listener for both incoming and outgoing self-messages
+// Listener for commands
 client.on('message_create', async (msg) => {
     if (msg.body.startsWith('!reply')) {
+        console.log(`[ACTION] Executing command: "${msg.body}"`);
         const prompt = msg.body.replace('!reply', '').trim();
         try {
             const response = await ai.models.generateContent({
@@ -58,8 +68,9 @@ client.on('message_create', async (msg) => {
                 contents: `Write ONLY the raw direct response message text to send back. Do NOT include preambles, options, or extra text. Instruction: ${prompt}`,
             });
             await msg.reply(response.text);
+            console.log(`[SUCCESS] Sent AI response.`);
         } catch (err) {
-            console.error('Error generating AI response:', err.message);
+            console.error('[ERROR] Gemini API failed:', err.message);
         }
     }
 });
