@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// Automatically clear leftover Chromium SingletonLock file on startup
+// Clear leftover Chromium SingletonLock file before starting
 const lockFilePath = path.join(__dirname, '.wwebjs_auth', 'session', 'SingletonLock');
 if (fs.existsSync(lockFilePath)) {
     try {
@@ -42,33 +42,32 @@ const client = new Client({
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, { small: true });
-
-    // Web-renderable QR link fallback
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
-    console.log('\n====================================');
-    console.log('VIEW CLEAN QR IN BROWSER:');
-    console.log(qrImageUrl);
-    console.log('====================================\n');
 });
 
 client.on('ready', () => {
     console.log('WhatsApp On-Demand Bot is Online and Ready!');
 });
 
-// Listener for ALL created messages (both incoming from others AND outgoing self-messages)
+// Primary event listener
 client.on('message_create', async (msg) => {
-    console.log(`[LOG] Message detected: "${msg.body}"`);
+    // 1. IGNORE STATUS UPDATES: Skip processing if the message is a status broadcast
+    if (msg.from === 'status@broadcast' || msg.to === 'status@broadcast') {
+        return;
+    }
 
+    console.log(`[LOG] Chat message detected: "${msg.body}"`);
+
+    // 2. PROCESS COMMANDS: Trigger only on messages starting with !reply
     if (msg.body.startsWith('!reply')) {
-        console.log(`[ACTION] Executing !reply command with prompt: "${msg.body}"`);
+        console.log(`[ACTION] Executing command: "${msg.body}"`);
         const prompt = msg.body.replace('!reply', '').trim();
         try {
             const response = await ai.models.generateContent({
                 model: 'gemini-3.5-flash',
                 contents: `Write ONLY the raw direct response message text to send back. Do NOT include preambles, options, or extra text. Instruction: ${prompt}`,
             });
-            console.log(`[SUCCESS] Gemini output generated: "${response.text}"`);
             await msg.reply(response.text);
+            console.log(`[SUCCESS] Sent AI response.`);
         } catch (err) {
             console.error('[ERROR] Gemini API failed:', err.message);
         }
