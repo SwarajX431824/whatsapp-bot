@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// Automatically clear leftover Chromium SingletonLock file on startup
+// Remove leftover Chromium SingletonLock file before initializing
 const lockFilePath = path.join(__dirname, '.wwebjs_auth', 'session', 'SingletonLock');
 if (fs.existsSync(lockFilePath)) {
     try {
@@ -39,7 +39,7 @@ client.on('ready', () => {
     console.log('WhatsApp On-Demand Bot is Online and Ready!');
 });
 
-// AI Response Logic
+// AI Response Listener
 client.on('message_create', async (msg) => {
     if (msg.body.startsWith('!reply')) {
         const prompt = msg.body.replace('!reply', '').trim();
