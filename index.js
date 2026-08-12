@@ -32,11 +32,15 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
+    // Standard terminal QR
     qrcode.generate(qr, { small: true });
-});
 
-client.on('ready', () => {
-    console.log('WhatsApp On-Demand Bot is Online and Ready!');
+    // Web-renderable QR link (click this in your logs to view in browser)
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
+    console.log('\n====================================');
+    console.log('OPEN THIS LINK IN BROWSER TO SCAN QR:');
+    console.log(qrImageUrl);
+    console.log('====================================\n');
 });
 
 // AI Response Listener
