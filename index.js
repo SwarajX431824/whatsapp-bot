@@ -1,11 +1,11 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+constconst { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// Clear leftover Chromium SingletonLock file from previous container runs
+// Automatically clear leftover Chromium SingletonLock file on startup
 const lockFilePath = path.join(__dirname, '.wwebjs_auth', 'session', 'SingletonLock');
 if (fs.existsSync(lockFilePath)) {
     try {
@@ -32,25 +32,21 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    // Standard terminal QR
     qrcode.generate(qr, { small: true });
-
-    // Web-renderable QR link (click this in your logs to view in browser)
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
-    console.log('\n====================================');
-    console.log('OPEN THIS LINK IN BROWSER TO SCAN QR:');
-    console.log(qrImageUrl);
-    console.log('====================================\n');
 });
 
-// AI Response Listener
+client.on('ready', () => {
+    console.log('WhatsApp On-Demand Bot is Online and Ready!');
+});
+
+// AI Response Logic
 client.on('message_create', async (msg) => {
     if (msg.body.startsWith('!reply')) {
         const prompt = msg.body.replace('!reply', '').trim();
         try {
             const response = await ai.models.generateContent({
                 model: 'gemini-2.0-flash',
-                contents: prompt,
+                contents: `Write ONLY the raw direct response message text to send back. Do NOT include preambles, options, or extra text. Instruction: ${prompt}`,
             });
             await msg.reply(response.text);
         } catch (err) {
