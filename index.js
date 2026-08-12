@@ -32,7 +32,15 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
+    // Terminal rendering
     qrcode.generate(qr, { small: true });
+
+    // Web-renderable QR link
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
+    console.log('\n====================================');
+    console.log('CLICK THIS LINK IN YOUR BROWSER TO SCAN QR:');
+    console.log(qrImageUrl);
+    console.log('====================================\n');
 });
 
 client.on('ready', () => {
@@ -45,7 +53,7 @@ client.on('message_create', async (msg) => {
         const prompt = msg.body.replace('!reply', '').trim();
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
+                model: 'gemini-3.5-flash',
                 contents: `Write ONLY the raw direct response message text to send back. Do NOT include preambles, options, or extra text. Instruction: ${prompt}`,
             });
             await msg.reply(response.text);
