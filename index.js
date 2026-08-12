@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// Remove leftover Chromium SingletonLock file before initializing
+// Clear leftover Chromium SingletonLock file before starting
 const lockFilePath = path.join(__dirname, '.wwebjs_auth', 'session', 'SingletonLock');
 if (fs.existsSync(lockFilePath)) {
     try {
@@ -19,7 +19,17 @@ if (fs.existsSync(lockFilePath)) {
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const puppeteerOpts = {
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    headless: true,
+    args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+    ]
 };
 
 if (process.platform === 'linux') {
@@ -32,33 +42,29 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    // Terminal rendering
     qrcode.generate(qr, { small: true });
-
-    // Web-renderable QR link
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
-    console.log('\n====================================');
-    console.log('CLICK THIS LINK IN YOUR BROWSER TO SCAN QR:');
-    console.log(qrImageUrl);
-    console.log('====================================\n');
 });
 
 client.on('ready', () => {
     console.log('WhatsApp On-Demand Bot is Online and Ready!');
 });
 
-// AI Response Listener
+// Primary event listener for both incoming and outgoing self-messages
 client.on('message_create', async (msg) => {
+    console.log(`[LOG] Message detected: "${msg.body}"`); // Prints all incoming/outgoing text to Railway logs
+
     if (msg.body.startsWith('!reply')) {
+        console.log(`[ACTION] Executing !reply command with prompt: "${msg.body}"`);
         const prompt = msg.body.replace('!reply', '').trim();
         try {
             const response = await ai.models.generateContent({
                 model: 'gemini-3.5-flash',
                 contents: `Write ONLY the raw direct response message text to send back. Do NOT include preambles, options, or extra text. Instruction: ${prompt}`,
             });
+            console.log(`[SUCCESS] Gemini output generated: "${response.text}"`);
             await msg.reply(response.text);
         } catch (err) {
-            console.error('Error generating AI response:', err.message);
+            console.error('[ERROR] Gemini API failed:', err.message);
         }
     }
 });
